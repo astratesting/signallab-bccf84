@@ -1,105 +1,96 @@
 # Signal Lab - AI Stock Predictor SaaS
 
-A modern AI-powered stock prediction platform built with Next.js 15, featuring real-time trading signals, confidence scoring, and watchlist management.
+A production-ready AI-powered stock prediction platform built with Next.js 15, NextAuth.js v5, Prisma, and FastAPI.
 
 ## Features
 
-### 🎯 Core Features
-- **AI Stock Predictions**: Get BUY/SELL/HOLD signals with confidence scores for major stocks (AAPL, MSFT, TSLA, NVDA, AMZN)
-- **Real-time Watchlist**: Track your favorite stocks with live updates
-- **Prediction History**: View past predictions and track accuracy
-- **Performance Analytics**: Monitor prediction accuracy and portfolio performance
-
-### 🔐 Authentication & Authorization
-- NextAuth.js v5 with credentials provider
-- Secure password hashing with bcryptjs
-- Protected dashboard routes with server-side session validation
-- User roles: FREE, PRO, ENTERPRISE
-
-### 💳 Subscription Tiers
-- **Free**: 5 predictions/day, 3 watchlist stocks
-- **Pro** ($29/mo): Unlimited predictions, 20 watchlist stocks, accuracy tracking
-- **Enterprise** ($99/mo): API access, custom models, priority support
-
-### 🎨 Design
-- Dark analytical theme with ink black/indigo/cyan palette
-- Space Grotesk + JetBrains Mono typography
-- Beam motif with animated radial gradients
-- Fully responsive design with Framer Motion animations
+- **Landing Page**: Dark analytical theme with ink black/indigo/cyan palette, Space Grotesk + JetBrains Mono fonts, beam motif
+- **Authentication**: NextAuth.js v5 with credentials provider (signup/signin)
+- **Dashboard**: AI stock predictions with buy/sell/hold signals, confidence scores, watchlist management
+- **Mock AI Engine**: Generates predictions for AAPL, TSLA, MSFT, NVDA, AMZN
+- **Pricing Page**: Three-tier subscription model
+- **Backend API**: FastAPI with RESTful endpoints for stocks, predictions, and watchlist
 
 ## Tech Stack
 
 ### Frontend
-- **Framework**: Next.js 15 (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **Auth**: NextAuth.js v5
-- **Database ORM**: Prisma
-- **Animations**: Framer Motion
-- **Icons**: Lucide React
-- **Charts**: Recharts
+- Next.js 15 with App Router
+- TypeScript
+- Tailwind CSS with custom theme
+- NextAuth.js v5 for authentication
+- Prisma with SQLite (dev) / PostgreSQL (prod)
+- Framer Motion for animations
+- Lucide React for icons
 
 ### Backend
-- **API**: Python FastAPI (optional — frontend uses built-in mock engine)
-- **Database**: SQLite (dev) / PostgreSQL (prod)
-- **ORM**: Prisma (Node.js, SQLite-compatible)
+- FastAPI (Python 3.11+)
+- Mock AI prediction engine
+- CORS-enabled for frontend integration
 
-## Getting Started
+## Quick Start
 
 ### Prerequisites
 - Node.js 18+
+- Python 3.11+
 - npm or yarn
-- Python 3.9+ (optional, for separate Python backend)
 
-### Installation
+### 1. Clone and Install Dependencies
 
-1. **Clone the repository**
 ```bash
-git clone <repository-url>
-cd signallab-bccf84
-```
-
-2. **Install frontend dependencies**
-```bash
+# Frontend
 cd frontend
 npm install
-```
 
-3. **Set up environment variables**
-```bash
-cd frontend
-cp .env.example .env
-# Edit .env and set a random NEXTAUTH_SECRET
-```
-
-4. **Set up the database (SQLite, no server needed)**
-```bash
-npx prisma generate
-npx prisma db push
-```
-
-5. **(Optional) Install backend dependencies**
-```bash
+# Backend
 cd ../backend
 pip install -r requirements.txt
 ```
 
-6. **Run the development servers**
+### 2. Environment Setup
 
-Frontend (Terminal 1):
+Frontend (`.env.local`):
+```
+DATABASE_URL="file:./dev.db"
+NEXTAUTH_SECRET="your-secret-key-change-in-production"
+NEXTAUTH_URL="http://localhost:3000"
+```
+
+Backend (if needed):
+```
+PORT=8000
+CORS_ORIGINS=["http://localhost:3000"]
+```
+
+### 3. Database Setup
+
+```bash
+cd frontend
+npx prisma generate
+npx prisma db push
+```
+
+### 4. Run the Application
+
+Terminal 1 - Frontend:
 ```bash
 cd frontend
 npm run dev
 ```
 
-Backend (Terminal 2, optional):
+Terminal 2 - Backend:
 ```bash
 cd backend
-uvicorn main:app --reload
+python3 main.py
 ```
 
-7. **Open the application**
-Navigate to `http://localhost:3000`
+### 5. Access the Application
+
+- **Landing Page**: http://localhost:3000
+- **Sign Up**: http://localhost:3000/auth/signup
+- **Sign In**: http://localhost:3000/auth/signin
+- **Dashboard**: http://localhost:3000/dashboard (requires auth)
+- **Pricing**: http://localhost:3000/pricing
+- **Backend API Docs**: http://localhost:8000/docs
 
 ## Project Structure
 
@@ -108,94 +99,139 @@ signallab-bccf84/
 ├── frontend/
 │   ├── src/
 │   │   ├── app/
-│   │   │   ├── api/
-│   │   │   │   ├── auth/
-│   │   │   │   │   ├── [...nextauth]/route.ts
-│   │   │   │   │   └── register/route.ts
-│   │   │   │   ├── predictions/
-│   │   │   │   │   ├── route.ts
-│   │   │   │   │   └── generate/route.ts
-│   │   │   │   └── watchlist/
-│   │   │   │       ├── route.ts
-│   │   │   │       └── [symbol]/route.ts
+│   │   │   ├── page.tsx              # Landing page
+│   │   │   ├── layout.tsx           # Root layout with fonts
+│   │   │   ├── globals.css          # Global styles + theme
 │   │   │   ├── auth/
-│   │   │   │   ├── signin/page.tsx
-│   │   │   │   └── signup/page.tsx
-│   │   │   ├── dashboard/page.tsx
-│   │   │   ├── pricing/page.tsx
-│   │   │   ├── page.tsx (landing)
-│   │   │   ├── layout.tsx
-│   │   │   └── globals.css
+│   │   │   │   ├── signin/          # Sign in page
+│   │   │   │   └── signup/          # Sign up page
+│   │   │   ├── dashboard/           # Dashboard with predictions
+│   │   │   ├── pricing/             # Pricing page
+│   │   │   └── api/
+│   │   │       ├── auth/            # NextAuth routes
+│   │   │       ├── predictions/      # Prediction API routes
+│   │   │       └── watchlist/       # Watchlist API routes
 │   │   ├── components/
-│   │   │   └── DashboardClient.tsx
+│   │   │   ├── DashboardClient.tsx  # Dashboard component
+│   │   │   ├── Header.tsx           # Navigation header
+│   │   │   ├── PredictionCard.tsx   # Prediction display
+│   │   │   └── prisma/             # Database client
 │   │   ├── lib/
-│   │   │   ├── auth.ts
-│   │   │   └── prisma.ts
+│   │   │   ├── auth.ts              # NextAuth config
+│   │   │   └── prisma.ts           # Prisma client
 │   │   └── types/
-│   │       └── user.ts
+│   │       └── user.ts              # TypeScript types
 │   ├── prisma/
-│   │   └── schema.prisma
+│   │   └── schema.prisma            # Database schema
 │   ├── package.json
-│   ├── tsconfig.json
 │   ├── next.config.js
 │   ├── tailwind.config.js
-│   └── postcss.config.js
+│   └── tsconfig.json
 ├── backend/
-│   └── main.py
+│   ├── main.py                      # FastAPI application
+│   └── requirements.txt             # Python dependencies
 └── README.md
 ```
 
 ## API Endpoints
 
-### Frontend API Routes (Next.js)
+### Backend (FastAPI - port 8000)
+
+- `GET /` - API status
+- `GET /api/stocks` - List all stocks with current prices
+- `GET /api/predictions` - Get all predictions
+- `GET /api/predictions/{symbol}` - Get prediction for specific stock
+- `POST /api/watchlist/add` - Add stock to watchlist
+- `GET /api/watchlist` - Get user's watchlist
+- `GET /health` - Health check
+
+### Frontend (Next.js API Routes - port 3000)
+
+- `POST /api/auth/[...nextauth]` - NextAuth authentication
 - `POST /api/auth/register` - User registration
-- `GET /api/auth/[...nextauth]` - NextAuth handler
-- `GET /api/predictions` - Get user predictions
-- `POST /api/predictions/generate` - Generate new prediction
-- `GET /api/watchlist` - Get user watchlist
+- `GET /api/predictions` - Get predictions (server-side)
+- `POST /api/predictions/generate` - Generate new predictions
+- `GET /api/watchlist` - Get watchlist
 - `POST /api/watchlist` - Add to watchlist
 - `DELETE /api/watchlist/[symbol]` - Remove from watchlist
 
-### Backend API (FastAPI)
-- `GET /` - API info
-- `GET /health` - Health check
-- `POST /api/predict` - Generate prediction
-- `GET /api/predict/{symbol}` - Get prediction for symbol
-- `GET /api/symbols` - List supported symbols
-- `GET /api/historical/{symbol}` - Get historical predictions
+## Authentication
+
+Uses NextAuth.js v5 with:
+- Credentials provider (email/password)
+- JWT strategy for session management
+- Prisma adapter for database persistence
+- Protected routes with middleware
+
+## Database Schema
+
+- **User**: id, name, email, password (hashed), createdAt, updatedAt
+- **Account**: OAuth accounts linked to users
+- **Session**: Active user sessions
+- **Prediction**: Stock predictions with signals and confidence
+- **Watchlist**: User's watched stocks
+
+## Mock AI Prediction Engine
+
+Generates realistic predictions for:
+- **AAPL** (Apple Inc.)
+- **TSLA** (Tesla Inc.)
+- **MSFT** (Microsoft Corp.)
+- **NVDA** (NVIDIA Corp.)
+- **AMZN** (Amazon.com Inc.)
+
+Prediction includes:
+- Signal: BUY, SELL, or HOLD
+- Confidence score: 0.65 - 0.95
+- Target price with time horizon
+- Reasoning based on technical indicators
+
+## Build and Deployment
+
+### Development
+```bash
+npm run dev
+```
+
+### Production Build
+```bash
+npm run build
+npm run start
+```
+
+### Deploy to Vercel
+```bash
+vercel deploy
+```
+
+### Deploy to Railway/Render
+- Connect GitHub repository
+- Set environment variables
+- Deploy with `npm run start`
 
 ## Environment Variables
 
-### Frontend (.env)
-```
-NEXTAUTH_SECRET=your-secret-key
-NEXTAUTH_URL=http://localhost:3000
-DATABASE_URL="postgresql://user:password@localhost:5432/signallab"
-NEXT_PUBLIC_API_URL=http://localhost:8000
-```
+### Frontend
+- `DATABASE_URL` - PostgreSQL connection string (or SQLite for dev)
+- `NEXTAUTH_SECRET` - Secret for JWT signing (generate with `openssl rand -base64 32`)
+- `NEXTAUTH_URL` - Base URL of the application
 
-## Deployment
+### Backend
+- `PORT` - Backend port (default: 8000)
+- `CORS_ORIGINS` - Allowed CORS origins
 
-### Frontend (Vercel)
-1. Push to GitHub
-2. Import project to Vercel
-3. Set environment variables
-4. Deploy
+## Testing the Application
 
-### Backend (Railway/Render)
-1. Create new Python service
-2. Set start command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
-3. Deploy
-
-### Database (Supabase/Neon)
-1. Create PostgreSQL database
-2. Run Prisma migrations
-3. Update DATABASE_URL
+1. **Sign Up**: Create a new account at `/auth/signup`
+2. **Sign In**: Log in at `/auth/signin`
+3. **View Dashboard**: See AI predictions at `/dashboard`
+4. **Manage Watchlist**: Add/remove stocks from watchlist
+5. **View Pricing**: Check subscription plans at `/pricing`
 
 ## License
 
-MIT License - see LICENSE file for details
+MIT License
 
 ## Support
 
-For support, email support@signallab.com or visit our pricing page to upgrade your plan.
+For issues and feature requests, please open an issue on the GitHub repository.

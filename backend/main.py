@@ -1,141 +1,123 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import uvicorn
+from typing import List, Optional
 import random
-from datetime import datetime
+from datetime import datetime, timedelta
 
 app = FastAPI(title="Signal Lab API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:3000", "http://localhost:3001"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-class PredictionRequest(BaseModel):
-    symbol: str
-
-class PredictionResponse(BaseModel):
-    symbol: str
-    signal: str
-    confidence: float
-    target_price: float
-    reasoning: str
-    timestamp: str
-
-# Mock prediction data for supported symbols
-MOCK_PREDICTIONS = {
-    "AAPL": {
-        "signal": "BUY",
-        "confidence_range": (82, 92),
-        "target_price_range": (190.0, 200.0),
-        "reasoning": "Strong iPhone sales momentum, growing services revenue, and positive analyst sentiment."
-    },
-    "TSLA": {
-        "signal": "HOLD",
-        "confidence_range": (65, 78),
-        "target_price_range": (230.0, 260.0),
-        "reasoning": "EV market saturation concerns balanced by autonomous driving progress."
-    },
-    "MSFT": {
-        "signal": "BUY",
-        "confidence_range": (88, 95),
-        "target_price_range": (410.0, 430.0),
-        "reasoning": "Azure cloud dominance, AI integration across product suite."
-    },
-    "NVDA": {
-        "signal": "BUY",
-        "confidence_range": (90, 97),
-        "target_price_range": (920.0, 980.0),
-        "reasoning": "AI chip demand surge, data center expansion, leading ML hardware position."
-    },
-    "AMZN": {
-        "signal": "SELL",
-        "confidence_range": (62, 75),
-        "target_price_range": (155.0, 175.0),
-        "reasoning": "Increased competition in cloud, margin pressure from logistics costs."
-    }
+# Mock stock data
+MOCK_STOCKS = {
+    "AAPL": {"name": "Apple Inc.", "basePrice": 178.50},
+    "TSLA": {"name": "Tesla Inc.", "basePrice": 248.50},
+    "MSFT": {"name": "Microsoft Corp.", "basePrice": 378.90},
+    "NVDA": {"name": "NVIDIA Corp.", "basePrice": 495.20},
+    "AMZN": {"name": "Amazon.com Inc.", "basePrice": 178.25},
 }
 
-SUPPORTED_SYMBOLS = list(MOCK_PREDICTIONS.keys())
+class Prediction(BaseModel):
+    symbol: str
+    signal: str  # BUY, SELL, HOLD
+    confidence: float
+    targetPrice: float
+    currentPrice: float
+    reasoning: str
+    timeHorizon: str
+    generatedAt: str
+
+class StockPrice(BaseModel):
+    symbol: str
+    name: str
+    price: float
+    change: float
+    changePercent: float
+    volume: int
+    marketCap: str
+
+class WatchlistItem(BaseModel):
+    symbol: str
+    alertEnabled: bool
+    alertThreshold: Optional[float] = None
+
+def generate_prediction(symbol: str) -> Prediction:
+    stock = MOCK_STOCKS.get(symbol)
+    if not stock:
+        raise HTTPException(status_code=404, detail=f"Stock {symbol} not found")
+
+    signals = ["BUY", "SELL", "HOLD"]
+    signal = random.choice(signals)
+    confidence = round(random.uniform(0.65, 0.95), 2)
+    current_price = stock["basePrice"] + random.uniform(-10, 10)
+    target_price = current_price * (1 + random.uniform(-0.15, 0.20))
+
+    reasoning_map = {
+        "BUY": f"Technical indicators show bullish momentum. RSI at {random.randint(30, 45)} suggests oversold condition. Moving averages aligning for upward trend.",
+        "SELL": f"Bearish divergence detected on MACD. Price approaching resistance at ${round(current_price * 1.05, 2)}. Volume declining on recent rallies.",
+        "HOLD": f"Stock trading in range between ${round(current_price * 0.97, 2)} and ${round(current_price * 1.03, 2)}. Awaiting catalyst for direction. Neutral sentiment."
+    }
+
+    return Prediction(
+        symbol=symbol,
+        signal=signal,
+        confidence=confidence,
+        targetPrice=round(target_price, 2),
+        currentPrice=round(current_price, 2),
+        reasoning=reasoning_map[signal],
+        timeHorizon=random.choice(["1 week", "2 weeks", "1 month", "3 months"]),
+        generatedAt=datetime.utcnow().isoformat()
+    )
 
 @app.get("/")
 async def root():
-    return {
-        "name": "Signal Lab API",
-        "version": "1.0.0",
-        "status": "operational",
-        "supported_symbols": SUPPORTED_SYMBOLS
-    }
+    return {"message": "Signal Lab API", "status": "operational", "version": "1.0.0"}
+
+@app.get("/api/stocks", response_model=List[StockPrice])
+async def get_stocks():
+    results = []
+    for symbol, data in MOCK_STOCKS.items():
+        price = data["basePrice"] + random.uniform(-10, 10)
+        change = random.uniform(-5, 8)
+        change_pct = (change / price) * 100
+        results.append(StockPrice(
+            symbol=symbol,
+            name=data["name"],
+            price=round(price, 2),
+            change=round(change, 2),
+            changePercent=round(change_pct, 2),
+            volume=random.randint(10000000, 80000000),
+            marketCap=f"${random.randint(500, 3000)}B"
+        ))
+    return results
+
+@app.get("/api/predictions/{symbol}", response_model=Prediction)
+async def get_prediction(symbol: str):
+    return generate_prediction(symbol.upper())
+
+@app.get("/api/predictions", response_model=List[Prediction])
+async def get_all_predictions():
+    return [generate_prediction(symbol) for symbol in MOCK_STOCKS.keys()]
+
+@app.post("/api/watchlist/add")
+async def add_to_watchlist(item: WatchlistItem):
+    return {"message": f"{item.symbol} added to watchlist", "symbol": item.symbol}
+
+@app.get("/api/watchlist")
+async def get_watchlist():
+    return {"items": list(MOCK_STOCKS.keys())}
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
-
-@app.post("/api/predict", response_model=PredictionResponse)
-async def generate_prediction(request: PredictionRequest):
-    symbol = request.symbol.upper()
-    
-    if symbol not in MOCK_PREDICTIONS:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Unsupported symbol. Supported: {', '.join(SUPPORTED_SYMBOLS)}"
-        )
-    
-    mock = MOCK_PREDICTIONS[symbol]
-    confidence = random.uniform(mock["confidence_range"][0], mock["confidence_range"][1])
-    target_price = random.uniform(mock["target_price_range"][0], mock["target_price_range"][1])
-    
-    return PredictionResponse(
-        symbol=symbol,
-        signal=mock["signal"],
-        confidence=round(confidence, 1),
-        target_price=round(target_price, 2),
-        reasoning=mock["reasoning"],
-        timestamp=datetime.now().isoformat()
-    )
-
-@app.get("/api/predict/{symbol}", response_model=PredictionResponse)
-async def get_prediction(symbol: str):
-    request = PredictionRequest(symbol=symbol)
-    return await generate_prediction(request)
-
-@app.get("/api/symbols")
-async def get_supported_symbols():
-    return {
-        "symbols": SUPPORTED_SYMBOLS,
-        "count": len(SUPPORTED_SYMBOLS)
-    }
-
-@app.get("/api/historical/{symbol}")
-async def get_historical_predictions(symbol: str, limit: int = 20):
-    symbol = symbol.upper()
-    
-    if symbol not in MOCK_PREDICTIONS:
-        raise HTTPException(status_code=400, detail="Unsupported symbol")
-    
-    historical = []
-    mock = MOCK_PREDICTIONS[symbol]
-    
-    for i in range(min(limit, 10)):
-        confidence = random.uniform(mock["confidence_range"][0], mock["confidence_range"][1])
-        target_price = random.uniform(mock["target_price_range"][0], mock["target_price_range"][1])
-        actual_return = round(random.uniform(-5.0, 15.0), 2) if random.random() > 0.3 else None
-        
-        historical.append({
-            "symbol": symbol,
-            "signal": mock["signal"],
-            "confidence": round(confidence, 1),
-            "target_price": round(target_price, 2),
-            "reasoning": mock["reasoning"],
-            "created_at": datetime.now().isoformat(),
-            "actual_return": actual_return
-        })
-    
-    return {"predictions": historical}
+    return {"status": "healthy", "timestamp": datetime.utcnow().isoformat()}
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8001)
