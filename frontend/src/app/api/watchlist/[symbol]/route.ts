@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { symbol: string } }
+  { params }: { params: Promise<{ symbol: string }> }
 ) {
   const session = await auth()
 
@@ -20,10 +20,12 @@ export async function DELETE(
     return NextResponse.json({ error: 'User not found' }, { status: 404 })
   }
 
+  const { symbol } = await params
+
   await prisma.watchlist.deleteMany({
     where: {
       userId: user.id,
-      symbol: params.symbol.toUpperCase(),
+      symbol: symbol.toUpperCase(),
     },
   })
 

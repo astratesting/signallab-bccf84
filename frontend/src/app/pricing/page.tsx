@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { Check, X, Zap, Crown, Building } from 'lucide-react'
-import { motion } from 'framer-motion'
 
+// Simple static pricing page without framer-motion
 const plans = [
   {
     name: 'Free',
@@ -94,34 +94,27 @@ export default function PricingPage() {
 
       {/* Pricing Header */}
       <section className="relative z-10 px-6 py-20 lg:px-12 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-        >
+        <div>
           <h1 className="text-5xl lg:text-6xl font-bold mb-6">
             Simple, <span className="text-cyan-bright">Transparent</span> Pricing
           </h1>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto">
             Choose the plan that fits your trading style. Upgrade or downgrade anytime.
           </p>
-        </motion.div>
+        </div>
       </section>
 
       {/* Pricing Cards */}
       <section className="relative z-10 px-6 pb-20 lg:px-12">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
           {plans.map((plan, i) => (
-            <motion.div
+            <div
               key={plan.name}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
               className={`relative card-dark p-8 ${
                 plan.popular ? 'border-cyan-bright ring-2 ring-cyan-bright/50' : 'border-cyan-bright/20'
               }`}
             >
-              {plan.popular && (
+            {plan.popular && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-cyan-bright text-ink-black px-4 py-1 rounded-full text-sm font-bold">
                   Most Popular
                 </div>
@@ -162,7 +155,7 @@ export default function PricingPage() {
               >
                 {plan.cta}
               </Link>
-            </motion.div>
+            </div>
           ))}
         </div>
       </section>
@@ -192,16 +185,13 @@ export default function PricingPage() {
                 answer: 'Our AI models achieve an average accuracy of 87.3%. Accuracy varies by stock and market conditions.',
               },
             ].map((faq, i) => (
-              <motion.div
+              <div
                 key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
                 className="card-dark p-6"
               >
                 <h3 className="text-lg font-bold text-white mb-2">{faq.question}</h3>
                 <p className="text-gray-400">{faq.answer}</p>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
