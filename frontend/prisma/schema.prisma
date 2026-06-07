@@ -3,22 +3,19 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
-enum UserRole {
-  FREE
-  PRO
-  ENTERPRISE
-}
+// Removed UserRole enum — SQLite does not support enums.
+// User.role is stored as a String: "FREE" | "PRO" | "ENTERPRISE"
 
 model User {
   id            String   @id @default(cuid())
   name          String?
   email         String   @unique
   password      String
-  role          UserRole @default(FREE)
+  role          String   @default("FREE") // "FREE" | "PRO" | "ENTERPRISE"
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -59,7 +56,7 @@ model Watchlist {
 model Subscription {
   id          String    @id @default(cuid())
   userId      String
-  plan        UserRole
+  plan        String    // "FREE" | "PRO" | "ENTERPRISE"
   status      String    // active, cancelled, past_due
   stripeId    String?
   currentPeriodEnd DateTime
