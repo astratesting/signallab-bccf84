@@ -40,17 +40,16 @@ A modern AI-powered stock prediction platform built with Next.js 15, featuring r
 - **Charts**: Recharts
 
 ### Backend
-- **API**: Python FastAPI
-- **Database**: PostgreSQL
-- **ORM**: Prisma (Node.js)
+- **API**: Python FastAPI (optional — frontend uses built-in mock engine)
+- **Database**: SQLite (dev) / PostgreSQL (prod)
+- **ORM**: Prisma (Node.js, SQLite-compatible)
 
 ## Getting Started
 
 ### Prerequisites
 - Node.js 18+
-- Python 3.9+
-- PostgreSQL database
 - npm or yarn
+- Python 3.9+ (optional, for separate Python backend)
 
 ### Installation
 
@@ -68,20 +67,21 @@ npm install
 
 3. **Set up environment variables**
 ```bash
+cd frontend
 cp .env.example .env
-# Edit .env with your database URL and NextAuth secret
+# Edit .env and set a random NEXTAUTH_SECRET
 ```
 
-4. **Set up the database**
+4. **Set up the database (SQLite, no server needed)**
 ```bash
-npx prisma migrate dev
 npx prisma generate
+npx prisma db push
 ```
 
-5. **Install backend dependencies**
+5. **(Optional) Install backend dependencies**
 ```bash
 cd ../backend
-pip install fastapi uvicorn pydantic
+pip install -r requirements.txt
 ```
 
 6. **Run the development servers**
@@ -92,7 +92,7 @@ cd frontend
 npm run dev
 ```
 
-Backend (Terminal 2):
+Backend (Terminal 2, optional):
 ```bash
 cd backend
 uvicorn main:app --reload
