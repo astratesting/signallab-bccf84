@@ -1,17 +1,16 @@
-import type { NextAuthOptions } from 'next-auth'
+import NextAuth from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
-import { PrismaAdapter } from '@next-auth/prisma-adapter'
+import { PrismaAdapter } from '@auth/prisma-adapter'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 
-export const authOptions: NextAuthOptions = {
+export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: {
     strategy: 'jwt',
   },
   pages: {
     signIn: '/auth/signin',
-    signUp: '/auth/signup',
   },
   providers: [
     CredentialsProvider({
@@ -26,7 +25,7 @@ export const authOptions: NextAuthOptions = {
         }
 
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+          where: { email: credentials.email as string },
         })
 
         if (!user || !user.password) {
@@ -34,7 +33,7 @@ export const authOptions: NextAuthOptions = {
         }
 
         const isPasswordValid = await bcrypt.compare(
-          credentials.password,
+          credentials.password as string,
           user.password
         )
 
@@ -46,7 +45,7 @@ export const authOptions: NextAuthOptions = {
           id: user.id,
           email: user.email,
           name: user.name,
-          role: user.role,
+          role: user.role as string,
         }
       },
     }),
@@ -54,22 +53,20 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async session({ session, token }) {
       if (token && session.user) {
-        session.user.id = token.id as string
-        session.user.name = token.name as string
-        session.user.email = token.email as string
-        session.user.role = token.role as string
+        (session.user as { id?: string }).id = token.id as string
+        ;(session.user as { name?: string }).name = token.name as string
+        ;(session.user as { email?: string }).email = token.email as string
+        ;(session.user as { role?: string }).role = token.role as string
       }
       return session
     },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id
-        token.role = user.role
+        token.role = (user as { role?: string }).role
       }
       return token
     },
   },
   secret: process.env.NEXTAUTH_SECRET,
-}
-
-export default authOptions
+})

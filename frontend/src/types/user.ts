@@ -15,11 +15,11 @@ export interface Prediction {
   targetPrice: number
   reasoning: string
   actualReturn: number | null
-  createdAt: string
+  createdAt: Date
 }
 
 export interface WatchlistItem {
   id: string
   symbol: string
-  addedAt: string
+  addedAt: Date
 }
